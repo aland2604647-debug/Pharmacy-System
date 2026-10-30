@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pharmacy Management System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    body {
+      background: radial-gradient(circle at top left, #0f172a, #020617, #064e3b);
+      background-attachment: fixed;
+      min-height: 100vh;
+      color: #f0fdf4;
+    }
+
+    .glass-card {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(52, 211, 153, 0.18);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+    }
+
+    .glass-modal {
+      background: rgba(2, 6, 23, 0.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.7);
+    }
+
+    .glass-input {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(52, 211, 153, 0.25);
+      color: #ffffff;
+    }
+
+    .glass-input:focus {
+      outline: none;
+      border-color: #34d399;
+      box-shadow: 0 0 15px rgba(52, 211, 153, 0.4);
+    }
+
+    .glass-btn-primary {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .glass-btn-primary:hover {
+      background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+      transform: translateY(-1px);
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(2, 6, 23, 0.5); }
+    ::-webkit-scrollbar-thumb { background: rgba(52, 211, 153, 0.3); border-radius: 4px; }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+
+  <div class="max-w-7xl mx-auto space-y-8">
+    
+    <!-- Header -->
+    <header class="glass-card rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-4">
+        <div class="p-3 bg-emerald-500/20 rounded-xl border border-emerald-400/30 text-emerald-400">
+          <i data-lucide="pill" class="w-8 h-8"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-extrabold bg-gradient-to-r from-emerald-200 via-teal-300 to-cyan-300 bg-clip-text text-transparent">
+            Pharmacy Management System
+          </h1>
+          <p class="text-emerald-300/70 text-sm">Full 20-Medicine Inventory & History Log</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 w-full md:w-auto">
+        <button onclick="openHistoryModal()" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-900/80 text-emerald-300 border border-emerald-500/30 hover:bg-slate-800 transition-all flex items-center gap-2">
+          <i data-lucide="history" class="w-4 h-4 text-emerald-400"></i>
+          Sales History Log
+        </button>
+        <button onclick="openAddModal()" class="glass-btn-primary flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-white font-medium w-full md:w-auto text-xs">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i>
+          Add New Item
+        </button>
+      </div>
+    </header>
+
+    <!-- Dashboard Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="glass-card p-5 rounded-2xl flex items-center gap-4">
+        <div class="p-3 bg-emerald-500/20 rounded-xl text-emerald-400"><i data-lucide="boxes" class="w-6 h-6"></i></div>
+        <div>
+          <p class="text-xs text-emerald-300/60 uppercase font-semibold">Total Inventory</p>
+          <p id="stat-total" class="text-2xl font-bold text-white">0</p>
+        </div>
+      </div>
+
+      <div class="glass-card p-5 rounded-2xl flex items-center gap-4">
+        <div class="p-3 bg-teal-500/20 rounded-xl text-teal-400"><i data-lucide="check-circle-2" class="w-6 h-6"></i></div>
+        <div>
+          <p class="text-xs text-emerald-300/60 uppercase font-semibold">Total Stock Units</p>
+          <p id="stat-instock" class="text-2xl font-bold text-white">0</p>
+        </div>
+      </div>
+
+      <div class="glass-card p-5 rounded-2xl flex items-center gap-4">
+        <div class="p-3 bg-cyan-500/20 rounded-xl text-cyan-400"><i data-lucide="receipt" class="w-6 h-6"></i></div>
+        <div>
+          <p class="text-xs text-emerald-300/60 uppercase font-semibold">Total Transactions</p>
+          <p id="stat-sales-count" class="text-2xl font-bold text-white">0</p>
+        </div>
+      </div>
+
+      <div class="glass-card p-5 rounded-2xl flex items-center gap-4">
+        <div class="p-3 bg-emerald-500/20 rounded-xl text-emerald-400"><i data-lucide="dollar-sign" class="w-6 h-6"></i></div>
+        <div>
+          <p class="text-xs text-emerald-300/60 uppercase font-semibold">Total Revenue</p>
+          <p id="stat-revenue" class="text-2xl font-bold text-emerald-400">$0.00</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row justify-between gap-4">
+      <div class="relative flex-1">
+        <i data-lucide="search" class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400/60"></i>
+        <input type="text" id="search-input" oninput="renderInventory()" placeholder="Search medicine by name or ID..." class="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm">
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="filterType('all')" id="filter-all" class="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600/40 text-emerald-200 border border-emerald-400/30">All</button>
+        <button onclick="filterType('OTC')" id="filter-otc" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900/60 text-emerald-400/70 border border-emerald-500/10">OTC</button>
+        <button onclick="filterType('Prescription')" id="filter-rx" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900/60 text-emerald-400/70 border border-emerald-500/10">Prescription</button>
+      </div>
+    </div>
+
+    <!-- Inventory Grid -->
+    <div id="inventory-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+
+  </div>
+
+  <!-- Modal: Detailed Medicine Info -->
+  <div id="detail-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="glass-modal w-full max-w-lg rounded-2xl p-6 space-y-6 relative overflow-hidden">
+      <button onclick="closeDetailModal()" class="absolute top-4 right-4 p-2 rounded-full bg-slate-900/80 text-emerald-400 hover:text-white border border-emerald-500/20 transition-all z-10">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex flex-col sm:flex-row gap-5 items-center sm:items-start border-b border-emerald-500/20 pb-5">
+        <div class="w-32 h-32 bg-slate-900 rounded-xl p-2 border border-emerald-500/20 flex-shrink-0 flex items-center justify-center overflow-hidden">
+          <img id="detail-img" src="" alt="" class="object-contain w-full h-full">
+        </div>
+        <div class="space-y-2 text-center sm:text-left">
+          <span id="detail-type-badge" class="inline-block px-2.5 py-0.5 text-[10px] uppercase font-extrabold rounded border"></span>
+          <h2 id="detail-name" class="text-xl font-bold text-white"></h2>
+          <p id="detail-id" class="text-xs font-mono text-emerald-400"></p>
+          <div class="flex items-center gap-3 justify-center sm:justify-start pt-1">
+            <span id="detail-price" class="text-2xl font-extrabold text-emerald-400"></span>
+            <span id="detail-stock" class="text-xs px-2.5 py-1 rounded-full font-semibold border"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="p-4 rounded-xl bg-slate-900/60 border border-emerald-500/20 space-y-2">
+          <h4 class="text-xs font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="info" class="w-4 h-4 text-emerald-400"></i>
+            Usage Instructions
+          </h4>
+          <p id="detail-usage" class="text-sm text-emerald-100/90 leading-relaxed"></p>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2 border-t border-emerald-500/20">
+        <button onclick="closeDetailModal()" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-900/60 text-emerald-300 border border-emerald-500/20">Close</button>
+        <button id="detail-sell-btn" class="glass-btn-primary px-5 py-2.5 rounded-xl text-xs font-semibold text-white flex items-center gap-2">
+          <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+          Process Sale
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Transaction History Log -->
+  <div id="history-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="glass-modal w-full max-w-3xl rounded-2xl p-6 space-y-5">
+      <div class="flex justify-between items-center border-b border-emerald-500/20 pb-4">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i data-lucide="history" class="w-5 h-5 text-emerald-400"></i>
+          Sales Transaction Log
+        </h3>
+        <button onclick="closeHistoryModal()" class="text-emerald-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="overflow-x-auto max-h-96">
+        <table class="w-full text-left text-xs text-emerald-200">
+          <thead class="bg-slate-900 text-emerald-400 uppercase tracking-wider sticky top-0 border-b border-emerald-500/20">
+            <tr>
+              <th class="py-3 px-4">Receipt ID</th>
+              <th class="py-3 px-4">Date & Time</th>
+              <th class="py-3 px-4">Item Name</th>
+              <th class="py-3 px-4">Qty</th>
+              <th class="py-3 px-4 text-right">Total Price</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body" class="divide-y divide-emerald-500/10"></tbody>
+        </table>
+      </div>
+
+      <div class="flex justify-between items-center pt-4 border-t border-emerald-500/20">
+        <span class="text-xs text-emerald-300/70">Cumulative Revenue</span>
+        <span id="history-total-revenue" class="text-lg font-bold text-emerald-400">$0.00</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Printable Official Receipt -->
+  <div id="receipt-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="glass-modal w-full max-w-sm rounded-2xl p-6 text-center space-y-4">
+      <div class="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/40">
+        <i data-lucide="check-circle" class="w-6 h-6"></i>
+      </div>
+      <h3 class="text-lg font-bold text-white">Transaction Complete</h3>
+      
+      <div id="receipt-details" class="text-left p-4 rounded-xl bg-slate-950/80 border border-emerald-500/30 text-xs space-y-2 font-mono">
+        <!-- Formatted Receipt Data -->
+      </div>
+
+      <button onclick="closeReceiptModal()" class="glass-btn-primary w-full py-2.5 rounded-xl text-xs font-semibold text-white">Close Receipt</button>
+    </div>
+  </div>
+
+  <!-- Modal: Sell Medicine -->
+  <div id="sell-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="glass-modal w-full max-w-md rounded-2xl p-6 space-y-5">
+      <div class="flex justify-between items-center border-b border-emerald-500/20 pb-4">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i data-lucide="shopping-cart" class="w-5 h-5 text-emerald-400"></i>
+          Process Sale
+        </h3>
+        <button onclick="closeSellModal()" class="text-emerald-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div id="sell-info" class="p-3 rounded-xl bg-slate-900/60 border border-emerald-500/20 text-xs space-y-1"></div>
+
+      <form onsubmit="handleProcessSale(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-emerald-300 mb-1">Quantity</label>
+          <input type="number" id="sell-qty" min="1" required oninput="calculateSellTotal()" class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+        </div>
+
+        <div class="flex justify-between items-center p-3 rounded-xl bg-emerald-950/40 border border-emerald-400/30">
+          <span class="text-xs text-emerald-300 font-medium">Total:</span>
+          <span id="sell-total" class="text-xl font-extrabold text-emerald-400">$0.00</span>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-emerald-500/20">
+          <button type="button" onclick="closeSellModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900/60 text-emerald-300">Cancel</button>
+          <button type="submit" class="glass-btn-primary px-5 py-2 rounded-xl text-xs font-semibold text-white">Confirm & Issue Receipt</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Medicine -->
+  <div id="add-modal" class="fixed inset-0 bg-black/75 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="glass-modal w-full max-w-md rounded-2xl p-6 space-y-5">
+      <div class="flex justify-between items-center border-b border-emerald-500/20 pb-4">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-400"></i>
+          Add New Medicine
+        </h3>
+        <button onclick="closeAddModal()" class="text-emerald-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form id="add-form" onsubmit="handleAddMedicine(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-emerald-300 mb-1">Medicine ID</label>
+          <input type="text" id="add-id" required placeholder="e.g. M121" class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-emerald-300 mb-1">Name</label>
+          <input type="text" id="add-name" required placeholder="e.g. Dexamethasone 4mg" class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-emerald-300 mb-1">Price ($)</label>
+            <input type="number" step="0.01" id="add-price" required placeholder="0.00" class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-emerald-300 mb-1">Stock</label>
+            <input type="number" id="add-stock" required placeholder="0" class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-emerald-300 mb-1">Image URL</label>
+          <input type="url" id="add-image" placeholder="https://example.com/image.jpg" class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-emerald-300 mb-1">Category / Usage Instructions</label>
+          <input type="text" id="add-details" required placeholder="OTC - Take 1 tablet daily / Prescription note" class="glass-input w-full px-3 py-2 rounded-lg text-sm">
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-emerald-500/20">
+          <button type="button" onclick="closeAddModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900/60 text-emerald-300 border border-emerald-500/20">Cancel</button>
+          <button type="submit" class="glass-btn-primary px-5 py-2 rounded-xl text-xs font-semibold text-white">Save Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Complete List of 20 Pre-loaded Medicines
+    let inventory = [
+      { id: "M101", name: "Amoxicillin 500mg", price: 12.50, stock: 45, detail: "Prescription - Antibiotic used to treat bacterial infections. Dosage: Take 1 capsule every 8 hours with water.", image: "https://cdn.shopify.com/s/files/1/0996/0350/files/Amoxicillin-500mg-Tablets-by-Rising-Pharma.jpg" },
+      { id: "M102", name: "Paracetamol 500mg", price: 3.20, stock: 120, detail: "OTC - Fast pain and fever relief. Dosage: Take 1-2 tablets every 4-6 hours as needed.", image: "https://cdn.sanity.io/images/psxq6m0f/production/5659c6e1644f44caa491d637768220590dade01c-367x367.jpg" },
+      { id: "M103", name: "Ibuprofen 400mg", price: 4.50, stock: 85, detail: "OTC - Anti-inflammatory drug for pain & swelling. Dosage: Take 1 tablet with food every 6 hours.", image: "https://thehealthpharmacy.co.uk/wp-content/uploads/2024/02/Ibuprofen-400mg-48-Tablets-.webp" },
+      { id: "M104", name: "Omeprazole 20mg", price: 15.00, stock: 30, detail: "Prescription - Reduces stomach acid. Dosage: Take 1 capsule daily before breakfast.", image: "https://www.meritpharm.com/wp-content/uploads/2022/11/Omeprazole-20mg-100.jpg" },
+      { id: "M105", name: "Metformin 500mg", price: 8.75, stock: 60, detail: "Prescription - Manages blood sugar in Type 2 Diabetes. Dosage: Take 1 tablet twice daily with meals.", image: "https://www.speedsmedical.co.uk/media/catalog/product/cache/1dd494c7ff3a7a2077c06629bcb6f0fc/m/e/metformin-500mg-1.png" },
+      { id: "M106", name: "Atorvastatin 20mg", price: 22.00, stock: 40, detail: "Prescription - Lowers cholesterol. Dosage: Take 1 tablet once daily at bedtime.", image: "https://www.henryschein.com/Products/1381061_US_Front_01_600x600.jpg" },
+      { id: "M107", name: "Cetirizine 10mg", price: 5.00, stock: 90, detail: "OTC - Antihistamine for allergies. Dosage: Take 1 tablet once daily with or without food.", image: "https://thehealthpharmacy.co.uk/wp-content/uploads/2024/02/cetirizine.jpg" },
+      { id: "M108", name: "Aspirin 81mg", price: 4.00, stock: 110, detail: "OTC - Low-dose blood thinner. Dosage: Take 1 tablet daily with a full glass of water.", image: "https://www.bayeraspirin.com/sites/g/files/vrxlpx58181/files/2024-11/bayer-aspirin-low-dose-bottle-300ct-480x480v2.jpg" },
+      { id: "M109", name: "Losartan 50mg", price: 14.30, stock: 25, detail: "Prescription - Lowers blood pressure. Dosage: Take 1 tablet once daily in the morning.", image: "https://www.mcguff.com/content/images/thumbs/0014331_losartan-50mg-tablets-90bottle.jpeg" },
+      { id: "M110", name: "Azithromycin 250mg", price: 18.50, stock: 20, detail: "Prescription - Antibiotic. Dosage: Take as directed by physician (5-day course).", image: "https://www.youngsurgicalsolutions.com/_next/image?url=https%3A%2F%2Fshop.youngsurgicalsolutions.com%2Fmedia%2Fcatalog%2Fproduct%2Fa%2Fz%2Fazit250-18o_om7a9erlqlehnnqt.jpeg&w=3840&q=75" },
+      { id: "M111", name: "Loratadine 10mg", price: 6.20, stock: 75, detail: "OTC - Non-drowsy 24-hour allergy relief. Dosage: Take 1 tablet daily.", image: "https://d2i5j94z9qxt5a.cloudfront.net/eyJidWNrZXQiOiJ3ZWxkcmlja3MtY2RuIiwia2V5IjoicHJvZHVjdHMvMzg3L3NxeWRNV2dENW5qclhpUjZwaGtocVd4b21UeGdUdmRxZUd1TWFnQTkucG5nIiwiaW1hZ2UiOnsicmVzaXplIjp7IndpZHRoIjo2MDAsImhlaWdodCI6NjAwLCJmaXQiOiJjb250YWluIn19fQ==" },
+      { id: "M112", name: "Ciprofloxacin 500mg", price: 16.80, stock: 15, detail: "Prescription - Broad-spectrum antibiotic. Dosage: Take 1 tablet every 12 hours.", image: "https://ft-pharma.com/wp-content/uploads/2026/05/ciprofloxacin-01.png" },
+      { id: "M113", name: "Sertraline 50mg", price: 25.00, stock: 35, detail: "Prescription - Antidepressant. Dosage: Take 1 tablet once daily in the morning or evening.", image: "https://www.empowerpharmacy.com/wp-content/uploads/2025/07/empower-pharmacy-commercial-sertraline-tablet-294x490-1.jpg" },
+      { id: "M114", name: "Multivitamin Complex", price: 9.99, stock: 50, detail: "OTC - Daily dietary supplement. Dosage: Take 1 tablet daily after breakfast.", image: "https://thefitfuelnutrition.com/cdn/shop/files/Applied_Nutrition_Multi-Vitamin_Complex2.png" },
+      { id: "M115", name: "Vitamin C 1000mg", price: 7.50, stock: 80, detail: "OTC - Immune support supplement. Dosage: Dissolve or chew 1 tablet daily.", image: "https://nutravita.com/cdn/shop/files/imresizer-resize-ChatGPT_Image_Sep_14_2026_06_15_27_PM_1.png" },
+      { id: "M116", name: "Hydrochlorothiazide 25mg", price: 11.20, stock: 40, detail: "Prescription - Diuretic. Dosage: Take 1 tablet daily in the morning.", image: "https://www.mcguff.com/content/images/thumbs/0003636_hydrochlorothiazide-hctz-25mg-100-tabletsbottle.jpeg" },
+      { id: "M117", name: "Guaifenesin Cough Syrup", price: 8.45, stock: 65, detail: "OTC - Expectorant cough syrup. Dosage: Take 10ml every 4 hours with water.", image: "https://i.ebayimg.com/images/g/ikEAAOSw~uxmY6gG/s-l1200.png" },
+      { id: "M118", name: "Prednisone 10mg", price: 13.10, stock: 18, detail: "Prescription - Corticosteroid. Dosage: Take with food as specified by doctor schedule.", image: "https://www.mcguff.com/content/images/thumbs/0015978_prednisone-10-mg-tablets-100-count.jpeg" },
+      { id: "M119", name: "Antacid Chewables", price: 4.25, stock: 95, detail: "OTC - Fast relief for heartburn. Dosage: Chew 2-4 tablets as symptoms occur.", image: "https://images.ctfassets.net/e17xppsxewz6/49mtsJbufwawxKtJIPJ78X/dc6474904685e347a2ff8163552ff324/Rolaids_Closure_Image_Refresh_Rolaids_Original_Mint_96ct_2500x2500_07-28-2026_US_EN_eContent_PI_Unsafe-1b.png" },
+      { id: "M120", name: "Gabapentin 300mg", price: 19.40, stock: 28, detail: "Prescription - Nerve pain relief. Dosage: Take 1 capsule 3 times daily as prescribed.", image: "https://thrivingpets.com/cdn/shop/products/gabapentin-300_8ad876f1-0b75-4782-8fc6-fa38547b16c8_grande.jpg" }
+    ];
+
+    let currentFilter = 'all';
+    let salesHistory = [];
+    let selectedMedicine = null;
+
+    function renderInventory() {
+      const searchVal = document.getElementById('search-input').value.toLowerCase();
+      const grid = document.getElementById('inventory-grid');
+      grid.innerHTML = '';
+
+      const filtered = inventory.filter(item => {
+        const matchesSearch = item.name.toLowerCase().includes(searchVal) || item.id.toLowerCase().includes(searchVal);
+        const matchesType = currentFilter === 'all' || item.detail.toLowerCase().includes(currentFilter.toLowerCase());
+        return matchesSearch && matchesType;
+      });
+
+      filtered.forEach(item => {
+        const isLow = item.stock < 30;
+        const isRx = item.detail.toLowerCase().includes('prescription');
+        const fallbackImg = `https://placehold.co/400x300/0f172a/34d399?text=${encodeURIComponent(item.name)}`;
+
+        const card = document.createElement('div');
+        card.className = "glass-card rounded-2xl overflow-hidden flex flex-col justify-between hover:border-emerald-400/50 transition-all hover:-translate-y-1 cursor-pointer group";
+        
+        card.onclick = (e) => {
+          if (!e.target.closest('button')) { openDetailModal(item.id); }
+        };
+
+        card.innerHTML = `
+          <div>
+            <div class="relative h-48 bg-slate-900 overflow-hidden flex items-center justify-center p-3 border-b border-emerald-500/10">
+              <img src="${item.image}" alt="${item.name}" 
+                   onerror="this.onerror=null; this.src='${fallbackImg}';"
+                   class="object-contain h-full w-full rounded-lg group-hover:scale-105 transition-transform duration-300">
+              
+              <span class="absolute top-3 left-3 px-2.5 py-1 text-[10px] uppercase font-extrabold rounded-md border ${isRx ? 'bg-cyan-950/80 text-cyan-300 border-cyan-400/40' : 'bg-emerald-950/80 text-emerald-300 border-emerald-400/40'} shadow-lg backdrop-blur-md">
+                ${isRx ? 'Prescription' : 'OTC'}
+              </span>
+
+              <span class="absolute top-3 right-3 px-2.5 py-1 text-[10px] font-bold rounded-md border ${isLow ? 'bg-amber-950/80 text-amber-300 border-amber-400/40' : 'bg-slate-950/80 text-emerald-400 border-emerald-400/30'} shadow-lg backdrop-blur-md">
+                ${item.stock} in stock
+              </span>
+            </div>
+
+            <div class="p-5 space-y-2">
+              <div class="flex justify-between items-start gap-2">
+                <h3 class="font-bold text-base text-white line-clamp-1 group-hover:text-emerald-300 transition-colors">${item.name}</h3>
+                <span class="font-mono text-xs text-emerald-400/80 font-semibold bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20">${item.id}</span>
+              </div>
+              <p class="text-xs text-emerald-200/60 line-clamp-2 h-8">${item.detail}</p>
+            </div>
+          </div>
+
+          <div class="px-5 pb-5 pt-2 flex items-center justify-between border-t border-emerald-500/10 mt-auto">
+            <div>
+              <p class="text-[10px] text-emerald-300/50 font-semibold uppercase">Price</p>
+              <p class="text-xl font-extrabold text-emerald-400">$${item.price.toFixed(2)}</p>
+            </div>
+            <button onclick="openSellModal('${item.id}')" class="glass-btn-primary px-4 py-2 rounded-xl text-xs font-semibold text-white flex items-center gap-1.5">
+              <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+              Sell
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      updateStats();
+      lucide.createIcons();
+    }
+
+    function updateStats() {
+      document.getElementById('stat-total').innerText = inventory.length;
+      document.getElementById('stat-instock').innerText = inventory.reduce((acc, i) => acc + i.stock, 0);
+      document.getElementById('stat-sales-count').innerText = salesHistory.length;
+      const totalRev = salesHistory.reduce((acc, s) => acc + s.total, 0);
+      document.getElementById('stat-revenue').innerText = `$${totalRev.toFixed(2)}`;
+    }
+
+    function filterType(type) {
+      currentFilter = type;
+      ['all', 'otc', 'rx'].forEach(t => {
+        const btn = document.getElementById(`filter-${t}`);
+        if (t === type.toLowerCase()) {
+          btn.className = "px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600/40 text-emerald-200 border border-emerald-400/30";
+        } else {
+          btn.className = "px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900/60 text-emerald-400/70 border border-emerald-500/10";
+        }
+      });
+      renderInventory();
+    }
+
+    function openDetailModal(id) {
+      const item = inventory.find(i => i.id === id);
+      if (!item) return;
+
+      const isRx = item.detail.toLowerCase().includes('prescription');
+      const isLow = item.stock < 30;
+      const fallbackImg = `https://placehold.co/400x300/0f172a/34d399?text=${encodeURIComponent(item.name)}`;
+
+      const imgEl = document.getElementById('detail-img');
+      imgEl.src = item.image;
+      imgEl.onerror = () => { imgEl.src = fallbackImg; };
+
+      document.getElementById('detail-name').innerText = item.name;
+      document.getElementById('detail-id').innerText = `ID: ${item.id}`;
+      document.getElementById('detail-price').innerText = `$${item.price.toFixed(2)}`;
+
+      const typeBadge = document.getElementById('detail-type-badge');
+      typeBadge.innerText = isRx ? 'Prescription Only (Rx)' : 'Over-The-Counter (OTC)';
+      typeBadge.className = `inline-block px-2.5 py-0.5 text-[10px] uppercase font-extrabold rounded border ${isRx ? 'bg-cyan-950/80 text-cyan-300 border-cyan-400/40' : 'bg-emerald-950/80 text-emerald-300 border-emerald-400/40'}`;
+
+      const stockBadge = document.getElementById('detail-stock');
+      stockBadge.innerText = `${item.stock} Units Available`;
+      stockBadge.className = `text-xs px-2.5 py-1 rounded-full font-semibold border ${isLow ? 'bg-amber-950/80 text-amber-300 border-amber-400/40' : 'bg-slate-900 text-emerald-400 border-emerald-400/30'}`;
+
+      document.getElementById('detail-usage').innerText = item.detail;
+
+      const sellBtn = document.getElementById('detail-sell-btn');
+      sellBtn.onclick = () => {
+        closeDetailModal();
+        openSellModal(item.id);
+      };
+
+      document.getElementById('detail-modal').classList.remove('hidden');
+    }
+
+    function closeDetailModal() { document.getElementById('detail-modal').classList.add('hidden'); }
+
+    function openSellModal(id) {
+      selectedMedicine = inventory.find(i => i.id === id);
+      if (!selectedMedicine) return;
+
+      document.getElementById('sell-info').innerHTML = `
+        <div class="flex justify-between"><span>Item:</span> <span class="font-bold text-white">${selectedMedicine.name}</span></div>
+        <div class="flex justify-between"><span>Stock Available:</span> <span>${selectedMedicine.stock} units</span></div>
+        <div class="flex justify-between"><span>Price per unit:</span> <span>$${selectedMedicine.price.toFixed(2)}</span></div>
+      `;
+      document.getElementById('sell-qty').max = selectedMedicine.stock;
+      document.getElementById('sell-qty').value = 1;
+      calculateSellTotal();
+      document.getElementById('sell-modal').classList.remove('hidden');
+    }
+
+    function closeSellModal() {
+      document.getElementById('sell-modal').classList.add('hidden');
+      selectedMedicine = null;
+    }
+
+    function calculateSellTotal() {
+      if (!selectedMedicine) return;
+      const qty = parseInt(document.getElementById('sell-qty').value) || 0;
+      document.getElementById('sell-total').innerText = `$${(qty * selectedMedicine.price).toFixed(2)}`;
+    }
+
+    function handleProcessSale(e) {
+      e.preventDefault();
+      if (!selectedMedicine) return;
+
+      const qty = parseInt(document.getElementById('sell-qty').value);
+      if (qty > selectedMedicine.stock) {
+        alert("Not enough stock!");
+        return;
+      }
+
+      selectedMedicine.stock -= qty;
+      const totalCost = qty * selectedMedicine.price;
+      const receiptId = "REC-" + Math.floor(100000 + Math.random() * 900000);
+      const timestamp = new Date().toLocaleString();
+
+      const transaction = {
+        receiptId: receiptId,
+        date: timestamp,
+        itemName: selectedMedicine.name,
+        qty: qty,
+        unitPrice: selectedMedicine.price,
+        total: totalCost
+      };
+
+      salesHistory.unshift(transaction);
+
+      closeSellModal();
+      renderInventory();
+      showReceipt(transaction);
+    }
+
+    function showReceipt(t) {
+      document.getElementById('receipt-details').innerHTML = `
+        <div class="text-center font-bold pb-2 border-b border-emerald-500/20 text-emerald-400">OFFICIAL RECEIPT</div>
+        <div class="flex justify-between pt-2"><span>Receipt #:</span> <span class="text-white">${t.receiptId}</span></div>
+        <div class="flex justify-between"><span>Date/Time:</span> <span class="text-white">${t.date}</span></div>
+        <div class="flex justify-between"><span>Item:</span> <span class="text-white font-bold">${t.itemName}</span></div>
+        <div class="flex justify-between"><span>Quantity:</span> <span class="text-white">${t.qty}</span></div>
+        <div class="flex justify-between"><span>Unit Price:</span> <span class="text-white">$${t.unitPrice.toFixed(2)}</span></div>
+        <div class="flex justify-between border-t border-emerald-500/30 pt-2 font-bold text-emerald-400 text-sm"><span>TOTAL PAID:</span> <span>$${t.total.toFixed(2)}</span></div>
+      `;
+      document.getElementById('receipt-modal').classList.remove('hidden');
+    }
+
+    function closeReceiptModal() { document.getElementById('receipt-modal').classList.add('hidden'); }
+
+    function openHistoryModal() {
+      const tbody = document.getElementById('history-table-body');
+      tbody.innerHTML = '';
+
+      if (salesHistory.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-emerald-300/50">No transactions recorded yet.</td></tr>`;
+      } else {
+        salesHistory.forEach(s => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="py-3 px-4 font-mono text-emerald-400">${s.receiptId}</td>
+            <td class="py-3 px-4 text-slate-300">${s.date}</td>
+            <td class="py-3 px-4 font-bold text-white">${s.itemName}</td>
+            <td class="py-3 px-4">${s.qty}</td>
+            <td class="py-3 px-4 text-right font-bold text-emerald-400">$${s.total.toFixed(2)}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+
+      const totalRev = salesHistory.reduce((acc, s) => acc + s.total, 0);
+      document.getElementById('history-total-revenue').innerText = `$${totalRev.toFixed(2)}`;
+      document.getElementById('history-modal').classList.remove('hidden');
+    }
+
+    function closeHistoryModal() { document.getElementById('history-modal').classList.add('hidden'); }
+
+    function openAddModal() { document.getElementById('add-modal').classList.remove('hidden'); }
+    function closeAddModal() {
+      document.getElementById('add-modal').classList.add('hidden');
+      document.getElementById('add-form').reset();
+    }
+
+    function handleAddMedicine(e) {
+      e.preventDefault();
+      const newMed = {
+        id: document.getElementById('add-id').value.trim(),
+        name: document.getElementById('add-name').value.trim(),
+        price: parseFloat(document.getElementById('add-price').value),
+        stock: parseInt(document.getElementById('add-stock').value),
+        image: document.getElementById('add-image').value.trim(),
+        detail: document.getElementById('add-details').value.trim()
+      };
+
+      inventory.unshift(newMed);
+      renderInventory();
+      closeAddModal();
+    }
+
+    document.addEventListener('DOMContentLoaded', renderInventory);
+  </script>
+</body>
+</html>
